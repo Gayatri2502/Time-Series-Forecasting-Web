@@ -11,3 +11,8 @@ fetchData(String url) async {
     throw Exception('Failed to load data');
   }
 }
+
+sendCSV(String url) async {
+  http.Response response = await http.post(Uri.parse(url));
+  print(response.body);
+}

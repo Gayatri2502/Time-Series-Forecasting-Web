@@ -1,16 +1,11 @@
-import 'dart:convert';
+import 'dart:async';
 
-import 'package:alpha_forecast_app/custom/helper_widgets/helper_functions.dart';
 import 'package:flutter/material.dart';
-import 'package:loading_animation_widget/loading_animation_widget.dart';
-import 'package:speech_to_text/speech_recognition_result.dart';
-import 'package:speech_to_text/speech_to_text.dart';
-import 'package:text_to_speech/text_to_speech.dart';
 
-import '../api/openai_api_service.dart';
 import '../custom/custom_widgets/build_chart_widget.dart';
 import '../custom/custom_widgets/display_chart_widget.dart';
 import '../custom/custom_widgets/display_table.dart';
+import '../custom/helper_widgets/helper_functions.dart';
 
 class ModelServiceScreen extends StatefulWidget {
   const ModelServiceScreen({super.key});
@@ -22,135 +17,38 @@ class ModelServiceScreen extends StatefulWidget {
 class _ModelServiceScreenState extends State<ModelServiceScreen> {
   List<Map<String, dynamic>> data = [];
   List<List<dynamic>> csvData = [];
+  Map<String, List<List<dynamic>>> csvDataMap = {};
+  late Timer timer;
   HelperFunctions helperFunctions = HelperFunctions();
   bool isLoaded = false;
   String fileName = '';
   int selectedService = -1;
   ChartType selectedChartType = ChartType.Bar;
 
-  TextEditingController userInputTextEditingController =
-      TextEditingController();
-  final SpeechToText speechToTextInstance = SpeechToText();
-  final TextToSpeech textToSpeechInstance = TextToSpeech();
-  bool speakMOMO = true;
-  String recordedAudioString = "";
-  bool isLoading = false;
-  String modeOpenAI = "chat";
-  String imageUrlFromOpenAI = "";
-  String answerTextFromOpenAI = "";
-  String displayUserQuestion = " ";
-
-  double rate = 2;
-
-  double volume = 50;
-
-  double pitch = 1;
-
-  void initializeSpeechToText() async {
-    await speechToTextInstance.initialize();
-
-    setState(() {});
-  }
-
-  void startListeningNow() async {
-    FocusScope.of(context).unfocus();
-
-    await speechToTextInstance.listen(onResult: onSpeechToTextResult);
-
-    setState(() {});
-  }
-
-  void stopListeningNow() async {
-    await speechToTextInstance.stop();
-
-    setState(() {});
-  }
-
-  void onSpeechToTextResult(SpeechRecognitionResult recognitionResult) {
-    recordedAudioString = recognitionResult.recognizedWords;
-
-    speechToTextInstance.isListening
-        ? null
-        : sendRequestToOpenAI(recordedAudioString);
-
-    print("Speech Result:");
-    print(recordedAudioString);
-  }
-
-  Future<void> sendRequestToOpenAI(String userInput) async {
-    stopListeningNow();
-
-    setState(() {
-      isLoading = true;
-    });
-
-    //send the request to openAI using our APIService
-    await APIService().requestOpenAI(userInput, modeOpenAI, 2000).then((value) {
-      setState(() {
-        isLoading = false;
-      });
-
-      if (value.statusCode == 401) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              "Api Key you are/were using expired or it is not working anymore.",
-            ),
-          ),
-        );
-      }
-
-      userInputTextEditingController.clear();
-
-      final responseAvailable = jsonDecode(value.body);
-
-      if (modeOpenAI == "chat") {
-        setState(() {
-          answerTextFromOpenAI = utf8.decode(
-              responseAvailable["choices"][0]["text"].toString().codeUnits);
-
-          print(displayUserQuestion);
-          print("ChatGPT Chat-bot: ");
-
-          print(answerTextFromOpenAI);
-
-          if (speakMOMO == true) {
-            textToSpeechInstance.setVolume(volume);
-            textToSpeechInstance.setRate(rate);
-            textToSpeechInstance.setPitch(pitch);
-            textToSpeechInstance.speak(answerTextFromOpenAI);
-          }
-        });
-      } else {
-        //image generation
-        setState(() {
-          imageUrlFromOpenAI = responseAvailable["data"][0]["url"];
-
-          print("Generated Dale E Image Url: ");
-          print(imageUrlFromOpenAI);
-        });
-      }
-    }).catchError((errorMessage) {
-      setState(() {
-        isLoading = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            "Error: $errorMessage",
-          ),
-        ),
-      );
-    });
-  }
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   _refreshCSVData();
+  //   timer =
+  //       Timer.periodic(Duration(minutes: 5), (Timer t) => _refreshCSVData());
+  // }
 
   @override
-  void initState() {
-    super.initState();
-    displayUserQuestion = userInputTextEditingController.text;
-    initializeSpeechToText();
+  void dispose() {
+    timer.cancel(); // Cancel the timer when the widget is disposed
+    super.dispose();
   }
+
+  // Future<void> _refreshCSVData() async {
+  //   try {
+  //     var newData = await helperFunctions.getAllCSVData();
+  //     setState(() {
+  //       csvDataMap = newData;
+  //     });
+  //   } catch (e) {
+  //     print("Error fetching CSV data: $e");
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -192,40 +90,14 @@ class _ModelServiceScreenState extends State<ModelServiceScreen> {
                 child: Row(
                   children: [
                     ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          backgroundColor: Colors.indigo,
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 15, vertical: 10),
-                          textStyle: TextStyle(fontSize: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 4,
-                          shadowColor: Colors.grey,
-                          minimumSize: Size(100, 40),
-                        ),
+                        style: const ButtonStyle(),
                         onPressed: () {},
                         child: const Text("Downloads")),
                     const SizedBox(
                       width: 20,
                     ),
                     ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          backgroundColor: Colors.indigo,
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 15, vertical: 10),
-                          textStyle: TextStyle(fontSize: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 4,
-                          shadowColor: Colors.grey,
-                          minimumSize: Size(100, 40),
-                        ),
-                        onPressed: () {},
-                        child: const Text("Guidelines"))
+                        onPressed: () {}, child: const Text("Guidelines"))
                   ],
                 ),
               ),
@@ -339,12 +211,9 @@ class _ModelServiceScreenState extends State<ModelServiceScreen> {
                                           ),
                                           IconButton(
                                             onPressed: () async {
-                                              HelperFunctions helperFunctions =
-                                                  HelperFunctions();
-                                              helperFunctions
-                                                  .getUploadedFiles();
+                                              //_refreshCSVData;
                                             },
-                                            icon: const Icon(Icons.list_alt),
+                                            icon: const Icon(Icons.refresh),
                                             tooltip: "Load all CSV file",
                                           ),
                                           const SizedBox(
@@ -380,27 +249,45 @@ class _ModelServiceScreenState extends State<ModelServiceScreen> {
                                     children: [
                                       const SizedBox(height: 20),
                                       Expanded(
-                                        child: ListView.builder(
-                                          // gridDelegate:
-                                          //     const SliverGridDelegateWithFixedCrossAxisCount(
-                                          //   crossAxisCount: 2,
-                                          //   crossAxisSpacing: 8.0,
-                                          //   mainAxisSpacing: 8.0,
-                                          // ),
-                                          itemCount: helperFunctions
-                                              .uploadedFiles.length,
-                                          itemBuilder: (context, index) {
-                                            return ElevatedButton(
-                                              onPressed: () {
-                                                print(
-                                                    'Button pressed for file: ${helperFunctions.uploadedFiles[index]}');
-                                              },
-                                              child: Expanded(
-                                                child: Text(helperFunctions
-                                                    .uploadedFiles[index]),
-                                              ),
-                                            );
-                                          },
+                                        child: Padding(
+                                          padding: EdgeInsets.all(8.0),
+                                          child: FutureBuilder<
+                                              List<Map<String, dynamic>>>(
+                                            future:
+                                                helperFunctions.getAllCSVData(),
+                                            builder: (context, snapshot) {
+                                              if (snapshot.connectionState ==
+                                                  ConnectionState.waiting) {
+                                                return Center(
+                                                    child:
+                                                        CircularProgressIndicator());
+                                              } else if (snapshot.hasError) {
+                                                return Center(
+                                                    child: Text(
+                                                        'Error: ${snapshot.error}'));
+                                              } else {
+                                                List<Map<String, dynamic>>
+                                                    uploads = snapshot.data!;
+                                                return ListView.builder(
+                                                  itemCount: uploads.length,
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    Map<String, dynamic>
+                                                        upload = uploads[index];
+                                                    return ListTile(
+                                                      title: Text(
+                                                          upload['fileName']),
+                                                      subtitle: Text(
+                                                          upload['fileUrl']),
+                                                      onTap: () {
+                                                        // Handle onTap if needed
+                                                      },
+                                                    );
+                                                  },
+                                                );
+                                              }
+                                            },
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -699,99 +586,9 @@ class _ModelServiceScreenState extends State<ModelServiceScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      Center(
-                        child: InkWell(
-                          onTap: () {
-                            speechToTextInstance.isListening
-                                ? stopListeningNow()
-                                : startListeningNow();
-                          },
-                          child: speechToTextInstance.isListening
-                              ? Center(
-                                  child: LoadingAnimationWidget.fallingDot(
-                                    size: 400,
-                                    color: speechToTextInstance.isListening
-                                        ? Colors.purple.shade700
-                                        : isLoading
-                                            ? Colors.deepPurple[400]!
-                                            : Colors.deepPurple[200]!,
-                                  ),
-                                )
-                              : Image.asset(
-                                  "asset/ai (6).jpg",
-                                  height: 400,
-                                  width: MediaQuery.of(context).size.width,
-                                ),
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          //text field
-                          Padding(
-                            padding: const EdgeInsets.only(left: 4.0),
-                            child: TextField(
-                              style: TextStyle(
-                                  fontStyle: FontStyle.italic,
-                                  fontFamily: 'codeFontFamily',
-                                  color: Colors.white70,
-                                  fontSize: 15),
-                              controller: userInputTextEditingController,
-                              decoration: InputDecoration(
-                                enabledBorder: const OutlineInputBorder(
-                                  borderSide: BorderSide(
-                                      width: 0.3, color: Colors.cyan),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(30),
-                                  borderSide: const BorderSide(
-                                      width: 0.3, color: Colors.purple),
-                                ),
-                                border: OutlineInputBorder(
-                                  borderSide: const BorderSide(
-                                      width: 3, color: Colors.white),
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                                hintText: "\t how can i help you?",
-                                hintTextDirection: TextDirection.ltr,
-                                hintStyle:
-                                    const TextStyle(color: Colors.white54),
-                                filled: true,
-                                fillColor: Colors.white12,
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(
-                            width: 10,
-                          ),
-
-                          //button
-                          InkWell(
-                            onTap: () {
-                              if (userInputTextEditingController
-                                  .text.isNotEmpty) {
-                                sendRequestToOpenAI(
-                                    userInputTextEditingController.text
-                                        .toString());
-                              }
-                            },
-                            child: AnimatedContainer(
-                              padding: const EdgeInsets.all(15),
-                              decoration: BoxDecoration(
-                                  shape: BoxShape.rectangle,
-                                  color: Colors.indigo.shade900),
-                              duration: const Duration(
-                                milliseconds: 1000,
-                              ),
-                              curve: Curves.bounceInOut,
-                              child: const Icon(
-                                Icons.send,
-                                color: Colors.white,
-                                size: 30,
-                              ),
-                            ),
-                          ),
-                        ],
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Image.asset("asset/ai (6).jpg"),
                       ),
                     ],
                   )
