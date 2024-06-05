@@ -83,22 +83,22 @@ class _SignupFormState extends State<SignupForm> {
                         },
                       ),
                       const SizedBox(height: 10.0),
-                      TextFormField(
-                        decoration: const InputDecoration(
-                          labelText: 'ISO ID',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value!.isEmpty) {
-                            return 'Please enter services provided.';
-                          }
-                          return null;
-                        },
-                        onSaved: (value) {
-                          servicesProvided = value!;
-                        },
-                      ),
-                      const SizedBox(height: 10.0),
+                      // TextFormField(
+                      //   decoration: const InputDecoration(
+                      //     labelText: 'ISO ID',
+                      //     border: OutlineInputBorder(),
+                      //   ),
+                      //   validator: (value) {
+                      //     if (value!.isEmpty) {
+                      //       return 'Please enter services provided.';
+                      //     }
+                      //     return null;
+                      //   },
+                      //   onSaved: (value) {
+                      //     servicesProvided = value!;
+                      //   },
+                      // ),
+                      // const SizedBox(height: 10.0),
                       TextFormField(
                         decoration: const InputDecoration(
                           labelText: 'Business service ',
@@ -147,22 +147,22 @@ class _SignupFormState extends State<SignupForm> {
                         },
                       ),
                       const SizedBox(height: 10.0),
-                      TextFormField(
-                        decoration: const InputDecoration(
-                          labelText: 'Address',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value!.isEmpty) {
-                            return 'Please enter location.';
-                          }
-                          return null;
-                        },
-                        onSaved: (value) {
-                          location = value!;
-                        },
-                      ),
-                      const SizedBox(height: 10.0),
+                      // TextFormField(
+                      //   decoration: const InputDecoration(
+                      //     labelText: 'Address',
+                      //     border: OutlineInputBorder(),
+                      //   ),
+                      //   validator: (value) {
+                      //     if (value!.isEmpty) {
+                      //       return 'Please enter location.';
+                      //     }
+                      //     return null;
+                      //   },
+                      //   onSaved: (value) {
+                      //     location = value!;
+                      //   },
+                      // ),
+                      // const SizedBox(height: 10.0),
                       TextFormField(
                         decoration: const InputDecoration(
                           labelText: 'Email-Id',
@@ -280,15 +280,22 @@ class _SignupFormState extends State<SignupForm> {
                           authServices.signUpWithGoogle(context);
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: theme.colorScheme.secondary,
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 15, vertical: 10),
+                          textStyle: TextStyle(fontSize: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          backgroundColor: Colors.black,
                         ),
                         icon: const Icon(
                           Icons.g_mobiledata,
+                          color: Colors.white,
                         ),
                         label: const Text(
                           'Sign up with Google',
                           style: TextStyle(
-                            color: Colors.black,
+                            color: Colors.white,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
