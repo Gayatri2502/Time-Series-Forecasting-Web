@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'dart:typed_data';
 
 import 'package:alpha_forecast_app/url/api_url.dart';
@@ -12,7 +13,10 @@ class HelperFunctions {
   Uint8List? fileBytes;
   List<String> uploadedFiles = [];
   ApiUrl _apiUrl = ApiUrl();
+  List<String> csvFileNames = [];
+  List<String> filteredCsvFileNames = [];
 
+  // Display names of uploaded csv files
   Future<List<Map<String, dynamic>>> getAllCSVData() async {
     CollectionReference csvFilesRef =
         FirebaseFirestore.instance.collection('csvFiles');
@@ -38,6 +42,45 @@ class HelperFunctions {
       print("Error fetching CSV data: $e");
       return [];
     }
+  }
+
+  // fetch csv data from file path
+  final FirebaseStorage storage = FirebaseStorage.instance;
+
+  Future<List<List<dynamic>>> fetchCSVData(String fileUrl) async {
+    try {
+      final Reference ref = storage.refFromURL(fileUrl);
+      final String downloadUrl = await ref.getDownloadURL();
+
+      final http.Response response = await http.get(Uri.parse(downloadUrl));
+
+      if (response.statusCode == 200) {
+        final List<List<dynamic>> csvData =
+            const CsvToListConverter().convert(response.body);
+        return csvData;
+      } else {
+        developer.log(
+            'Failed to load CSV file with status code: ${response.statusCode}');
+        throw Exception('Failed to load CSV file');
+      }
+    } catch (e) {
+      developer.log('Error fetching CSV data: $e');
+      throw Exception('Error fetching CSV data: $e');
+    }
+  }
+
+  //dropdown csv list names
+  Future<void> fetchCsvFileNames() async {
+    List<Map<String, dynamic>> csvData = await getAllCSVData();
+    csvFileNames = csvData.map((data) => data['fileName'] as String).toList();
+  }
+
+  //to filter dropdown list names
+  void filterCsvFileNames(String query) {
+    filteredCsvFileNames = csvFileNames
+        .where(
+            (fileName) => fileName.toLowerCase().contains(query.toLowerCase()))
+        .toList();
   }
 
   Future<List<List<dynamic>>> loadCSVHelper(List<List<dynamic>> csvData) async {
@@ -98,6 +141,7 @@ class HelperFunctions {
                 await filesCollection.add({
                   'fileName': fileName,
                   'fileUrl': fileUrl,
+                  'fileData': Uint8List.fromList(fileBytes),
                 });
 
                 print(
