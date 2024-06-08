@@ -1,0 +1,15 @@
+[33m8ec2819[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m, [m[1;31morigin/resurface-csv-uploading[m[33m, [m[1;31morigin/master[m[33m)[m HEAD@{0}: reset: moving to 8ec2819dd99ea3185fd2197972bf779a6c7886db
+[33md40cdfe[m HEAD@{1}: reset: moving to d40cdfe88a3655f5f4b9d27f5167ca71af1ff038
+[33m9907df3[m HEAD@{2}: reset: moving to 9907df3889c65bc044be103dd78ac1643a97ad48
+[33mceab1e3[m HEAD@{3}: reset: moving to ceab1e39d3282439f33433a8e072383ae2ca903c
+[33m19c6660[m HEAD@{4}: reset: moving to 19c6660eb0f2f0b9aa5917ee4b7b8a5fb99f2c9a
+[33m0de0cc8[m HEAD@{5}: revert: Revert "Changes related to :"
+[33m19c6660[m HEAD@{6}: revert: Revert "requirements.txt file for ml model"
+[33mceab1e3[m HEAD@{7}: commit: requirements.txt file for ml model
+[33m9907df3[m HEAD@{8}: commit: Changes related to :
+[33md40cdfe[m HEAD@{9}: checkout: moving from demo to master
+[33md40cdfe[m HEAD@{10}: checkout: moving from master to demo
+[33md40cdfe[m HEAD@{11}: commit: signup_form_widget button update
+[33m8ec2819[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m, [m[1;31morigin/resurface-csv-uploading[m[33m, [m[1;31morigin/master[m[33m)[m HEAD@{12}: commit: changes made in Sarima Model
+[33m54b84f1[m HEAD@{13}: commit: Firebase & csv issues solved
+[33m10c59dd[m HEAD@{14}: commit (initial): Initial commit

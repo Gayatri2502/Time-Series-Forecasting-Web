@@ -226,7 +226,8 @@ class _ModelServiceScreenState extends State<ModelServiceScreen> {
                                                 HelperFunctions();
                                             List<List<dynamic>> newData =
                                                 await helperFunctions
-                                                    .loadCSVHelper(csvData);
+                                                    .uploadCSVToServerHelper(
+                                                        csvData);
                                             setState(() {
                                               csvData = newData;
                                             });
@@ -477,7 +478,8 @@ class _ModelServiceScreenState extends State<ModelServiceScreen> {
                                                 HelperFunctions();
                                             List<List<dynamic>> newData =
                                                 await helperFunctions
-                                                    .loadCSVHelper(csvData);
+                                                    .uploadCSVToServerHelper(
+                                                        csvData);
                                             setState(() {
                                               csvData = newData;
                                             });

@@ -16,7 +16,7 @@ class HelperFunctions {
   List<String> csvFileNames = [];
   List<String> filteredCsvFileNames = [];
 
-  // Display names of uploaded csv files
+  // THIS FUNCTION DISPLAYS LIST OF CSV FILE NAMES FRON FIREBASE
   Future<List<Map<String, dynamic>>> getAllCSVData() async {
     CollectionReference csvFilesRef =
         FirebaseFirestore.instance.collection('csvFiles');
@@ -44,9 +44,8 @@ class HelperFunctions {
     }
   }
 
-  // fetch csv data from file path
+  // THIS FUNCTION HELPS TO LOAD DATA OF PARTICULAR CSV FILE FROM FIREBASE STORAGE FILE PATH
   final FirebaseStorage storage = FirebaseStorage.instance;
-
   Future<List<List<dynamic>>> fetchCSVData(String fileUrl) async {
     try {
       final Reference ref = storage.refFromURL(fileUrl);
@@ -69,13 +68,13 @@ class HelperFunctions {
     }
   }
 
-  //dropdown csv list names
+  //THIS FUNCTION HELPS TO SHOW CSV FILE NAMES IN DROPDOWN
   Future<void> fetchCsvFileNames() async {
     List<Map<String, dynamic>> csvData = await getAllCSVData();
     csvFileNames = csvData.map((data) => data['fileName'] as String).toList();
   }
 
-  //to filter dropdown list names
+  //THIS FUNCTION HELPS TO FILTER CSV FILE NAMES
   void filterCsvFileNames(String query) {
     filteredCsvFileNames = csvFileNames
         .where(
@@ -83,7 +82,63 @@ class HelperFunctions {
         .toList();
   }
 
-  Future<List<List<dynamic>>> loadCSVHelper(List<List<dynamic>> csvData) async {
+  // FUNCTION FOR UPLOADING TO FIREBASE FIRESTORE & FIREBASE STORAGE
+  Future<List<List<dynamic>>> uploadCSVToServerHelper(
+      List<List<dynamic>> csvData) async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['csv'],
+      );
+
+      if (result != null) {
+        PlatformFile file = result.files.first;
+
+        print(file.name);
+        print(file.size);
+        print(file.extension);
+
+        if (result.files.single.bytes != null) {
+          List<int> fileBytes = result.files.single.bytes!;
+          String fileName = result.files.single.name;
+          final csvString = String.fromCharCodes(fileBytes);
+          List<List<dynamic>> decodedData =
+              const CsvToListConverter().convert(csvString);
+
+          try {
+            print('Uploading file to Firebase Cloud Storage...');
+            Reference storageReference = FirebaseStorage.instance
+                .ref()
+                .child('TimeSeriesData/$fileName');
+
+            await storageReference.putData(Uint8List.fromList(fileBytes));
+
+            String fileUrl = await storageReference.getDownloadURL();
+
+            CollectionReference filesCollection =
+                FirebaseFirestore.instance.collection('csvFiles');
+            await filesCollection.add({
+              'fileName': fileName,
+              'fileUrl': fileUrl,
+              'fileData': Uint8List.fromList(fileBytes),
+            });
+
+            print(
+                'File uploaded to Firebase Cloud Storage and reference saved to Realtime Database');
+          } catch (e) {
+            print('Error uploading file to Firebase: $e');
+          }
+          return decodedData;
+        }
+      }
+    } catch (e) {
+      print("Error picking or uploading CSV file: $e");
+    }
+    return [];
+  }
+
+  Future<List<List<dynamic>>> loadCSVHelper2(
+      List<List<dynamic>> csvData) async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -118,6 +173,8 @@ class HelperFunctions {
               ),
             );
             var response = await request.send();
+            var responseData = await http.Response.fromStream(response);
+
             if (response.statusCode == 200) {
               print('CSV file uploaded successfully to Flask server');
 
@@ -127,15 +184,10 @@ class HelperFunctions {
                     .ref()
                     .child('TimeSeriesData/$fileName');
 
-                // Uint8List fileBytes = Uint8List.fromList(result.files.single.bytes!);
-
-                // Upload file to Firebase Cloud Storage
                 await storageReference.putData(Uint8List.fromList(fileBytes));
 
-                // File uploaded successfully to Cloud Storage, now save reference to Realtime Database
                 String fileUrl = await storageReference.getDownloadURL();
 
-                // Save reference to Realtime Database
                 CollectionReference filesCollection =
                     FirebaseFirestore.instance.collection('csvFiles');
                 await filesCollection.add({
@@ -151,10 +203,10 @@ class HelperFunctions {
               }
             } else {
               print(
-                  'Failed to upload CSV file to Flask server: ${response.reasonPhrase}');
+                  'Failed to upload CSV file to Flask server: ${responseData.body}');
             }
           } catch (e) {
-            print('Error uploading file to flask: $e');
+            print('Error uploading file to Flask: $e');
           }
           return decodedData;
         }
@@ -164,6 +216,8 @@ class HelperFunctions {
     }
     return [];
   }
+
+  // -------------------------------------------------------------------------------------------
 
   // Future<List<String>> getUploadedFiles() async {
   //   try {
@@ -333,3 +387,86 @@ class HelperFunctions {
     }
   }
 }
+
+//---------------------- LOAD CSV TO FLASK, FIREBASE COLLECTION & STORAGE
+// Future<List<List<dynamic>>> loadCSVHelper2(List<List<dynamic>> csvData) async {
+//   try {
+//     FilePickerResult? result = await FilePicker.platform.pickFiles(
+//       type: FileType.custom,
+//       allowedExtensions: ['csv'],
+//     );
+//
+//     if (result != null) {
+//       PlatformFile file = result.files.first;
+//
+//       if (result.files.single.bytes != null) {
+//         List<int> fileBytes = result.files.single.bytes!;
+//         String fileName = result.files.single.name;
+//         final csvString = String.fromCharCodes(fileBytes);
+//         List<List<dynamic>> decodedData =
+//         const CsvToListConverter().convert(csvString);
+//
+//         try {
+//           print('Uploading file to Flask...');
+//           var request = http.MultipartRequest(
+//             'POST',
+//             Uri.parse(_apiUrl.csvUpload),
+//           );
+//           request.files.add(
+//             http.MultipartFile.fromBytes(
+//               'file',
+//               fileBytes,
+//               filename: fileName,
+//             ),
+//           );
+//           request.fields['sales_column'] =
+//           'sales'; // Adjust field names as required
+//           request.fields['time_column'] = 'time';
+//           request.fields['seasonality'] = 'Monthly'; // Adjust as needed
+//
+//           var response = await request.send();
+//           var responseData = await http.Response.fromStream(response);
+//
+//           if (response.statusCode == 200) {
+//             print('CSV file uploaded successfully to Flask server');
+//
+//             try {
+//               print('Uploading file to Firebase Cloud Storage...');
+//               Reference storageReference = FirebaseStorage.instance
+//                   .ref()
+//                   .child('TimeSeriesData/$fileName');
+//
+//               await storageReference.putData(Uint8List.fromList(fileBytes));
+//
+//               String fileUrl = await storageReference.getDownloadURL();
+//
+//               CollectionReference filesCollection =
+//               FirebaseFirestore.instance.collection('csvFiles');
+//               await filesCollection.add({
+//                 'fileName': fileName,
+//                 'fileUrl': fileUrl,
+//                 'fileData': Uint8List.fromList(fileBytes),
+//               });
+//
+//               print(
+//                   'File uploaded to Firebase Cloud Storage and reference saved to Realtime Database');
+//             } catch (e) {
+//               print('Error uploading file to Firebase: $e');
+//             }
+//           } else {
+//             print(
+//                 'Failed to upload CSV file to Flask server: ${responseData.body}');
+//           }
+//         } catch (e) {
+//           print('Error uploading file to Flask: $e');
+//         }
+//         return decodedData;
+//       }
+//     }
+//   } catch (e) {
+//     print("Error picking or uploading CSV file: $e");
+//   }
+//   return [];
+// }
+
+//-------------------------------------------------------------------------

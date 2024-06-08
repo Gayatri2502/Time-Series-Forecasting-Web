@@ -44,7 +44,7 @@ class _PresentationWidgetState extends State<PresentationWidget> {
                   onPressed: () async {
                     HelperFunctions helperFunctions = HelperFunctions();
                     List<List<dynamic>> newData =
-                        await helperFunctions.loadCSVHelper(csvData);
+                        await helperFunctions.uploadCSVToServerHelper(csvData);
                     setState(() {
                       csvData = newData;
                     });
