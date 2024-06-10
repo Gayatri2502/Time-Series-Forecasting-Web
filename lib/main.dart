@@ -1,7 +1,6 @@
+import 'package:alpha_forecast_app/screens/desktop_home_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-
-import 'custom/custom_widgets/dd.dart';
 
 void main() async {
   print("Initializing Firebase");
@@ -48,7 +47,7 @@ class _MyAppState extends State<MyApp> {
         useMaterial3: true,
       ),
       routes: {
-        '/': (context) => DemoPage(),
+        '/': (context) => DesktopHomeScreen(),
         // '/service_screen': (context) => ServiceScreen(),
         // '/about_screen': (context) => AboutScreen(),
         // '/contact_screen': (context) => ContactScreen(),
