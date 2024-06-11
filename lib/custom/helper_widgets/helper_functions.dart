@@ -18,7 +18,6 @@ class HelperFunctions {
   List<String> columnNames = [];
   List<String> filteredCsvFileNames = [];
 
-  // THIS FUNCTION DISPLAYS LIST OF CSV FILE NAMES FRON FIREBASE
   Future<List<Map<String, dynamic>>> getAllCSVData() async {
     CollectionReference csvFilesRef =
         FirebaseFirestore.instance.collection('csvFiles');
@@ -28,10 +27,8 @@ class HelperFunctions {
       QuerySnapshot querySnapshot = await csvFilesRef.get();
 
       querySnapshot.docs.forEach((doc) {
-        Map<String, dynamic>? data = doc.data()
-            as Map<String, dynamic>?; // Casting to Map<String, dynamic>?
+        Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
         if (data != null) {
-          // Check if data is not null
           uploads.add({
             'fileName': data['fileName'],
             'fileUrl': data['fileUrl'],
@@ -46,18 +43,31 @@ class HelperFunctions {
     }
   }
 
-  // THIS FUNCTION HELPS TO LOAD DATA OF PARTICULAR CSV FILE FROM FIREBASE STORAGE FILE PATH
   final FirebaseStorage storage = FirebaseStorage.instance;
+
   Future<List<List<dynamic>>> fetchCSVData(String fileUrl) async {
     try {
+      // Validate URL format
+      if (!fileUrl.startsWith('gs://') && !fileUrl.startsWith('https://')) {
+        throw FormatException('Invalid URL format: $fileUrl');
+      }
+
+      // Debug log to verify URL
+      print('Fetching CSV data from URL: $fileUrl');
+
+      // Get the download URL directly without re-decoding it
       final Reference ref = storage.refFromURL(fileUrl);
       final String downloadUrl = await ref.getDownloadURL();
 
+      // Debug log to verify download URL
+      print('Download URL: $downloadUrl');
+
+      // Fetch CSV file data
       final http.Response response = await http.get(Uri.parse(downloadUrl));
 
       if (response.statusCode == 200) {
         final List<List<dynamic>> csvData =
-            const CsvToListConverter().convert(response.body);
+            const CsvToListConverter().convert(utf8.decode(response.bodyBytes));
         return csvData;
       } else {
         developer.log(
@@ -70,13 +80,11 @@ class HelperFunctions {
     }
   }
 
-  //THIS FUNCTION HELPS TO SHOW CSV FILE NAMES IN DROPDOWN
   Future<void> fetchCsvFileNames() async {
     List<Map<String, dynamic>> csvData = await getAllCSVData();
     csvFileNames = csvData.map((data) => data['fileName'] as String).toList();
   }
 
-  //THIS FUNCTION HELPS TO FILTER CSV FILE NAMES
   void filterCsvFileNames(String query) {
     filteredCsvFileNames = csvFileNames
         .where(
@@ -84,7 +92,6 @@ class HelperFunctions {
         .toList();
   }
 
-  // FUNCTION FOR UPLOADING TO FIREBASE FIRESTORE & FIREBASE STORAGE
   Future<List<List<dynamic>>> uploadCSVToServerHelper(
       List<List<dynamic>> csvData) async {
     try {
@@ -96,10 +103,6 @@ class HelperFunctions {
       if (result != null) {
         PlatformFile file = result.files.first;
 
-        print(file.name);
-        print(file.size);
-        print(file.extension);
-
         if (result.files.single.bytes != null) {
           List<int> fileBytes = result.files.single.bytes!;
           String fileName = result.files.single.name;
@@ -108,11 +111,9 @@ class HelperFunctions {
               const CsvToListConverter().convert(csvString);
 
           try {
-            print('Uploading file to Firebase Cloud Storage...');
             Reference storageReference = FirebaseStorage.instance
                 .ref()
                 .child('TimeSeriesData/$fileName');
-
             await storageReference.putData(Uint8List.fromList(fileBytes));
 
             String fileUrl = await storageReference.getDownloadURL();
@@ -124,9 +125,6 @@ class HelperFunctions {
               'fileUrl': fileUrl,
               'fileData': Uint8List.fromList(fileBytes),
             });
-
-            print(
-                'File uploaded to Firebase Cloud Storage and reference saved to Realtime Database');
           } catch (e) {
             print('Error uploading file to Firebase: $e');
           }
@@ -139,9 +137,8 @@ class HelperFunctions {
     return [];
   }
 
-  Future loadCsvAndExtractColumns(String fileName) async {
+  Future<List<String>?> loadCsvAndExtractColumns(String fileName) async {
     try {
-      // Find the URL for the selected file
       List<Map<String, dynamic>> csvData = await getAllCSVData();
       String? fileUrl;
 
@@ -153,25 +150,18 @@ class HelperFunctions {
       }
 
       if (fileUrl != null) {
-        // Fetch CSV data from the file URL
+        // Debug log to verify file URL
+        print('File URL: $fileUrl');
+
         List<List<dynamic>> csvContent = await fetchCSVData(fileUrl);
 
-        // Check the first row to ensure it's valid for column names
         if (csvContent.isNotEmpty && csvContent.first.isNotEmpty) {
-          // Debug print to check the content of the first row
-          print('First row of CSV: ${csvContent.first}');
-
-          // Extract column names from the first row of the CSV content
           List<String> extractedColumns =
               csvContent.first.map((value) => value.toString()).toList();
-
-          // Check if the extracted columns are all strings and not data
           bool isColumnNames =
               extractedColumns.every((column) => column is String);
 
           if (isColumnNames) {
-            // Update the state with the extracted column names
-
             return extractedColumns;
           } else {
             print('Error: The first row does not contain valid column names.');
@@ -184,10 +174,8 @@ class HelperFunctions {
       }
     } catch (e) {
       print('Error loading and extracting columns: $e');
-      // ScaffoldMessenger.of(context).showSnackBar(
-      //   SnackBar(content: Text('Error loading and extracting columns: $e')),
-      // );
     }
+    return null;
   }
 
   Future<void> postToFlaskServer({
@@ -199,14 +187,12 @@ class HelperFunctions {
     required void Function(String) onError,
   }) async {
     try {
-      // Retrieve the file URL from Firestore using the file name
       String? fileUrl = await getFileUrlByName(fileName);
       if (fileUrl == null) {
         onError('File URL not found for the selected file name.');
         return;
       }
 
-      // Fetch the file data from Firebase Storage using the file URL
       Uint8List? fileBytes = await fetchFileData(fileUrl);
       if (fileBytes == null) {
         onError('Failed to fetch file data from Firebase Storage.');
@@ -215,19 +201,14 @@ class HelperFunctions {
 
       var request = http.MultipartRequest('POST', Uri.parse(_apiUrl.csvUpload));
       request.files.add(
-        http.MultipartFile.fromBytes(
-          'file',
-          fileBytes,
-          filename: fileName,
-        ),
-      );
+          http.MultipartFile.fromBytes('file', fileBytes, filename: fileName));
       request.fields['time_column'] = selectedMonthColumn;
       request.fields['sales_column'] = selectedSalesColumn;
       request.fields['seasonality'] = selectedSeasonality;
 
       var response = await request.send();
       var responseData = await http.Response.fromStream(response);
-      print('Uploading to Flask server');
+
       if (response.statusCode == 200) {
         Map<String, dynamic> responseJson = await Future.delayed(
           Duration(seconds: 1),
@@ -236,19 +217,14 @@ class HelperFunctions {
               : {},
         );
 
-        print('CSV file uploaded successfully to Flask server');
-        print('Response from server: $responseJson');
-
         onSuccess(responseJson);
       } else {
         String errorResponse =
             'Failed to upload CSV file to Flask server: ${responseData.body}';
-        print(errorResponse);
         onError(errorResponse);
       }
     } catch (e) {
       String errorResponse = 'Error picking or uploading CSV file: $e';
-      print(errorResponse);
       onError(errorResponse);
     }
   }
@@ -257,7 +233,16 @@ class HelperFunctions {
     List<Map<String, dynamic>> csvData = await getAllCSVData();
     for (var data in csvData) {
       if (data['fileName'] == fileName) {
-        return data['fileUrl'];
+        final fileUrl = data['fileUrl'];
+        if (fileUrl != null &&
+            (fileUrl.startsWith('gs://') || fileUrl.startsWith('https://'))) {
+          // Debug log to verify URL
+          print('Found file URL: $fileUrl');
+          return fileUrl;
+        } else {
+          // Log invalid URL
+          print('Invalid file URL: $fileUrl');
+        }
       }
     }
     return null;
@@ -279,45 +264,6 @@ class HelperFunctions {
     } catch (e) {
       print('Error fetching CSV data: $e');
       return null;
-    }
-  }
-
-  Future pickCSVFileHelper(List<Map<String, dynamic>> data) async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['csv'],
-    );
-    if (result != null) {
-      fileName = result.files.single.name;
-      Uint8List fileBytes = result.files.single.bytes!;
-      String csvString = String.fromCharCodes(fileBytes);
-
-      List<List<dynamic>> csvTable =
-          const CsvToListConverter().convert(csvString);
-
-      int numRows = csvTable.length;
-      int numColumns = csvTable.isNotEmpty ? csvTable[0].length : 0;
-
-      data.clear();
-
-      if (numRows > 0) {
-        List<dynamic> headers = csvTable[0];
-        int lastColumnIndex = headers.length - 1; // Index of the last column
-
-        for (int i = 1; i < numRows; i++) {
-          List<dynamic> row = csvTable[i];
-
-          if (row.length >= numColumns) {
-            Map<String, dynamic> rowData = {
-              'Category': row.sublist(0, lastColumnIndex).toString(),
-              'Value': double.tryParse(row[lastColumnIndex].toString()) ?? 0.0,
-            };
-            data.add(rowData);
-          }
-        }
-      }
-
-      return fileName;
     }
   }
 }

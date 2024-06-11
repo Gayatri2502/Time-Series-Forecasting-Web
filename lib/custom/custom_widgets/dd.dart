@@ -30,10 +30,10 @@ class _DemoPageState extends State<DemoPage> {
 
   // Function to load CSV and update columns
   Future<void> _loadCsvAndUpdateColumns(String fileName) async {
-    List<String> extractedColumns =
+    List<String>? extractedColumns =
         await helperFunctions.loadCsvAndExtractColumns(fileName);
     setState(() {
-      helperFunctions.columnNames = extractedColumns;
+      helperFunctions.columnNames = extractedColumns!;
       selectedMonthColumn = null; // Reset selected column
     });
   }

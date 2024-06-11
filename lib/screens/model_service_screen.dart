@@ -5,8 +5,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
-import '../custom/custom_widgets/build_chart_widget.dart';
-import '../custom/custom_widgets/display_chart_widget.dart';
+import '../custom/custom_widgets/data_visualization_widget.dart';
 import '../custom/custom_widgets/display_table.dart';
 import '../custom/helper_widgets/helper_functions.dart';
 
@@ -26,24 +25,49 @@ class _ModelServiceScreenState extends State<ModelServiceScreen> {
   bool isLoaded = false;
   String fileName = '';
   int selectedService = -1;
-  ChartType selectedChartType = ChartType.Bar;
   bool _isDropdownVisible = false;
-
   List<String> columns = [];
   String? selectedMonthColumn;
   String? selectedSalesColumn;
   String selectedSeasonality = 'Monthly';
   Uint8List? fileBytes;
-
+  List<String> csvFileNames = [];
+  List<String> columnNames = [];
+  String selectedFileName = '';
+  String selectedChartType = 'Line Chart';
+  String xAxisColumn = '';
+  String yAxisColumn = '';
+  String xAxisLabel = '';
+  String yAxisLabel = '';
+  String graphTitle = '';
+  String timePeriod = 'Normal';
   bool isLoading = false;
+
+  Future<void> fetchCsvFileNames() async {
+    await helperFunctions.fetchCsvFileNames();
+    setState(() {
+      csvFileNames = helperFunctions.csvFileNames;
+    });
+  }
+
+  Future<void> loadColumns(String fileName) async {
+    setState(() {
+      isLoading = true;
+    });
+    columnNames = (await helperFunctions.loadCsvAndExtractColumns(fileName))!;
+    setState(() {
+      isLoading = false;
+    });
+  }
+
   Map<String, dynamic>? serverResponse;
 
   // Function to load CSV and update columns
   Future<void> _loadCsvAndUpdateColumns(String fileName) async {
-    List<String> extractedColumns =
+    List<String>? extractedColumns =
         await helperFunctions.loadCsvAndExtractColumns(fileName);
     setState(() {
-      helperFunctions.columnNames = extractedColumns;
+      helperFunctions.columnNames = extractedColumns!;
       selectedMonthColumn = null; // Reset selected column
     });
   }
@@ -107,7 +131,7 @@ class _ModelServiceScreenState extends State<ModelServiceScreen> {
               subtitleTextStyle: const TextStyle(
                 fontSize: 15,
               ),
-              trailing: Container(
+              trailing: SizedBox(
                 width: 300,
                 child: Row(
                   children: [
@@ -355,7 +379,7 @@ class _ModelServiceScreenState extends State<ModelServiceScreen> {
                                                       ),
                                                       child: ListTile(
                                                         title: Text(
-                                                            '[${index}] ${upload['fileName']}',
+                                                            '[$index] ${upload['fileName']}',
                                                             style: const TextStyle(
                                                                 fontSize: 15.0,
                                                                 color: Colors
@@ -574,118 +598,29 @@ class _ModelServiceScreenState extends State<ModelServiceScreen> {
                               ),
                             ),
                           ),
+                          const SizedBox(height: 20),
                         ],
                       ),
                     ),
                   ),
                   Visibility(
                     visible: selectedService == 3,
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Container(
-                                //
-                                height:
-                                    MediaQuery.of(context).size.height * 0.9,
-                                width: MediaQuery.of(context).size.width * 0.05,
-                                decoration: BoxDecoration(
-                                  color: Colors.indigo.shade50,
-                                  borderRadius: BorderRadius.circular(10),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.indigo.withOpacity(0.2),
-                                      spreadRadius: 5,
-                                      blurRadius: 8,
-                                      offset: const Offset(2, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Center(
-                                    child: Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: Column(
-                                    children: [
-                                      const SizedBox(
-                                        height: 50,
-                                      ),
-                                      IconButton(
-                                        onPressed: () async {
-                                          String resultFileName =
-                                              await helperFunctions
-                                                  .pickCSVFileHelper(data);
-                                          setState(() {
-                                            fileName = resultFileName;
-                                          });
-                                        },
-                                        icon: const Icon(
-                                            Icons.auto_graph_outlined),
-                                        tooltip: "Visualization",
-                                      ),
-                                    ],
-                                  ),
-                                )),
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.all(6),
-                              width: MediaQuery.of(context).size.width * 0.653,
-                              height: MediaQuery.of(context).size.height * 0.9,
-                              decoration: BoxDecoration(
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.grey.withOpacity(0.5),
-                                    spreadRadius: 5,
-                                    blurRadius: 7,
-                                    offset: const Offset(0, 3),
-                                  ),
-                                ],
-                                borderRadius: BorderRadius.circular(10),
-                                color: Colors.white,
-                                border: Border.all(
-                                  color: Colors.white10,
-                                ),
-                              ),
-                              child: Expanded(
-                                child: Center(
-                                    child: Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: Column(
-                                    children: [
-                                      Text('Selected File: $fileName'),
-                                      DropdownButton<ChartType>(
-                                        value: selectedChartType,
-                                        onChanged: (newValue) {
-                                          setState(() {
-                                            selectedChartType = newValue!;
-                                          });
-                                        },
-                                        items:
-                                            ChartType.values.map((chartType) {
-                                          return DropdownMenuItem<ChartType>(
-                                            value: chartType,
-                                            child: Text(chartType
-                                                .toString()
-                                                .split('.')
-                                                .last),
-                                          );
-                                        }).toList(),
-                                      ),
-                                      DisplayChartWidget(
-                                        data: data,
-                                        isDarkMode: true,
-                                      )
-                                    ],
-                                  ),
-                                )),
-                              ),
+                    child: Container(
+                        height: MediaQuery.of(context).size.height * 0.93,
+                        width: MediaQuery.of(context).size.width * 0.93,
+                        decoration: BoxDecoration(
+                          color: Colors.indigo.shade50,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.indigo.withOpacity(0),
+                              spreadRadius: 5,
+                              blurRadius: 8,
+                              offset: const Offset(2, 2),
                             ),
                           ],
                         ),
-                      ],
-                    ),
+                        child: DataVisualization()),
                   ),
                   Visibility(
                     visible: selectedService == 4,
@@ -1098,7 +1033,7 @@ class _ModelServiceScreenState extends State<ModelServiceScreen> {
                                                               ),
                                                             ),
                                                             if (_isDropdownVisible)
-                                                              Container(
+                                                              SizedBox(
                                                                 width: 500,
                                                                 height: 100,
                                                                 child: ListView
@@ -1600,7 +1535,7 @@ class _ModelServiceScreenState extends State<ModelServiceScreen> {
                                     ),
                                     child: ListTile(
                                       title: Text(
-                                          '[${index}] ${upload['fileName']}',
+                                          '[$index] ${upload['fileName']}',
                                           style: const TextStyle(
                                               fontSize: 13.0,
                                               color: Colors.black,
@@ -1701,7 +1636,7 @@ class _ModelServiceScreenState extends State<ModelServiceScreen> {
           child: Column(
             children: [
               Image.asset(
-                "${path}",
+                "$path",
                 height: 90,
               ),
               Padding(
@@ -1947,9 +1882,9 @@ class _ModelServiceScreenState extends State<ModelServiceScreen> {
         ),
         const SizedBox(height: 20),
         // ACF Plot Section
-        Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: const Column(
+        const Padding(
+          padding: EdgeInsets.all(20.0),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -2003,9 +1938,9 @@ class _ModelServiceScreenState extends State<ModelServiceScreen> {
         const SizedBox(height: 20),
         const SizedBox(height: 20),
         // Forecast Plot Series Output Section
-        Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: const Column(
+        const Padding(
+          padding: EdgeInsets.all(20.0),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(

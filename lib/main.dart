@@ -47,7 +47,7 @@ class _MyAppState extends State<MyApp> {
         useMaterial3: true,
       ),
       routes: {
-        '/': (context) => DesktopHomeScreen(),
+        '/': (context) => DesktopHomeScreen()
         // '/service_screen': (context) => ServiceScreen(),
         // '/about_screen': (context) => AboutScreen(),
         // '/contact_screen': (context) => ContactScreen(),

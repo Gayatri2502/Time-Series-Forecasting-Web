@@ -1,4 +1,3 @@
-import 'package:alpha_forecast_app/screens/data_visualization/visualization_presentation.dart';
 import 'package:flutter/material.dart';
 
 class VisualizationIntroWidget extends StatelessWidget {
@@ -58,10 +57,10 @@ class VisualizationIntroWidget extends StatelessWidget {
                     ),
                   ),
                   onPressed: () {
-                    Navigator.of(context)
-                        .push(MaterialPageRoute(builder: (context) {
-                      return PresentationWidget();
-                    }));
+                    // Navigator.of(context)
+                    //     .push(MaterialPageRoute(builder: (context) {
+                    //   return PresentationWidget();
+                    // }));
                   },
                   child: const Text(
                     'Lets Go !!',
