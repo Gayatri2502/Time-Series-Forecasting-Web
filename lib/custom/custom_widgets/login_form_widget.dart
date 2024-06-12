@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../auth/auth_services/auth_services.dart';
 import '../../screens/desktop_home_screen.dart';
 import '../../screens/detail_form.dart';
-import 'loading_widget.dart';
 
 class LoginForm extends StatefulWidget {
   const LoginForm({Key? key}) : super(key: key);
@@ -13,10 +12,8 @@ class LoginForm extends StatefulWidget {
 }
 
 class _LoginFormState extends State<LoginForm> {
-  String businessType = '';
-  String servicesProvided = '';
-  String ownerName = '';
-  String id = '';
+  String emailId = '';
+  String password = '';
   bool isHovered = false;
   AuthServices authServices = AuthServices();
   final _formKey = GlobalKey<FormState>();
@@ -62,56 +59,59 @@ class _LoginFormState extends State<LoginForm> {
                       const SizedBox(height: 30.0),
                       TextFormField(
                         decoration: const InputDecoration(
-                          labelText: 'Admin Id',
+                          labelText: 'Email',
                           border: OutlineInputBorder(),
                         ),
                         validator: (value) {
                           if (value!.isEmpty) {
-                            return 'Please enter owner name.';
+                            return 'Please enter your email address';
                           }
                           return null;
                         },
                         onSaved: (value) {
-                          ownerName = value!;
+                          emailId = value!;
                         },
                       ),
                       const SizedBox(height: 20.0),
                       TextFormField(
                         decoration: const InputDecoration(
-                          labelText: 'password',
+                          labelText: 'Password',
                           border: OutlineInputBorder(),
                         ),
                         validator: (value) {
                           if (value!.isEmpty) {
-                            return 'Please enter an ID.';
+                            return 'Please enter your password';
                           }
                           return null;
                         },
                         onSaved: (value) {
-                          id = value!;
+                          password = value!;
                         },
+                        obscureText: true,
                       ),
                       const SizedBox(height: 35.0),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           foregroundColor: Colors.white,
                           backgroundColor: Colors.indigo,
-                          padding: EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                               horizontal: 15, vertical: 10),
-                          textStyle: TextStyle(fontSize: 16),
+                          textStyle: const TextStyle(fontSize: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
                           elevation: 4,
                           shadowColor: Colors.grey,
-                          minimumSize: Size(100, 40),
+                          minimumSize: const Size(100, 40),
                         ),
-                        onPressed: () {
-                          LoadAndNavigateWidget.showLoadingAndNavigate(
-                              context, DesktopHomeScreen());
+                        onPressed: () async {
+                          Navigator.of(context)
+                              .push(MaterialPageRoute(builder: (context) {
+                            return DesktopHomeScreen();
+                          }));
                         },
                         child: const Text(
-                          'Log In ',
+                          'Log In',
                           style: TextStyle(color: Colors.white),
                         ),
                       ),

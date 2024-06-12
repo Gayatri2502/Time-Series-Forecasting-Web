@@ -79,11 +79,11 @@ class VisualizationIntroWidget extends StatelessWidget {
             //   ),
             // ),
             Positioned(
-                right: 1,
+                left: 1,
                 top: 30,
                 child: Image.network(
                   'asset/graphic.gif',
-                  scale: 0.8,
+                  scale: 1,
                 ))
           ],
         ));

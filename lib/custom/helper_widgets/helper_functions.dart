@@ -6,6 +6,7 @@ import 'package:alpha_forecast_app/url/api_url.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:http/http.dart' as http;
 
@@ -265,6 +266,38 @@ class HelperFunctions {
       print('Error fetching CSV data: $e');
       return null;
     }
+  }
+}
+
+// Function to create a user with email and password
+Future<void> createUserWithEmailAndPassword({
+  required String email,
+  required String password,
+  required String ownerName,
+  required String phoneNumber,
+}) async {
+  try {
+    print('Creating user with email: $email');
+
+    // Create user with Firebase Authentication
+    UserCredential userCredential =
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
+    // Store user data in Firestore
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userCredential.user?.uid)
+        .set({
+      'ownerName': ownerName,
+      'phoneNumber': phoneNumber,
+      'email': email,
+    });
+  } catch (e) {
+    print('Error: $e');
+    throw e;
   }
 }
 

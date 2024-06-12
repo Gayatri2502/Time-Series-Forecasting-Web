@@ -2,8 +2,34 @@ import 'package:flutter/material.dart';
 
 import '../../auth/auth_services/auth_services.dart';
 import '../../screens/detail_form.dart';
-import '../theme/custom_theme.dart';
-// Import your CustomThemeProvider class
+import '../helper_widgets/helper_functions.dart';
+
+// onSubmit function
+void onSubmit(BuildContext context, GlobalKey<FormState> formKey,
+    String ownerName, String phoneNumber, String email, String password) async {
+  if (formKey.currentState!.validate()) {
+    formKey.currentState!.save();
+
+    print('Email after form validation: $email');
+
+    try {
+      await createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+        ownerName: ownerName,
+        phoneNumber: phoneNumber,
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('User account created successfully')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to create user account: $e')),
+      );
+    }
+  }
+}
 
 class SignupForm extends StatefulWidget {
   const SignupForm({Key? key}) : super(key: key);
@@ -13,42 +39,34 @@ class SignupForm extends StatefulWidget {
 }
 
 class _SignupFormState extends State<SignupForm> {
-  String businessType = '';
-  String servicesProvided = '';
-  String ownerName = '';
-  String location = '';
-  String id = '';
-  bool isHovered = false;
-  AuthServices authServices = AuthServices();
   final _formKey = GlobalKey<FormState>();
+  String ownerName = '';
+  String phoneNumber = '';
+  String email = '';
+  String password = '';
+  String confirmPassword = '';
+  AuthServices authServices = AuthServices();
 
-  bool isLogin = false;
-
+  bool isLogin = true;
   @override
   Widget build(BuildContext context) {
-    final themeProvider =
-        CustomThemeProvider(); // Initialize your CustomThemeProvider
-    final ThemeData theme = themeProvider.getTheme(); // Get the current theme
-
+    final ThemeData theme = Theme.of(context);
     return Column(
       children: [
-        const SizedBox(
-          height: 55,
-        ),
+        const SizedBox(height: 55),
         Text(
           'Create a new account',
-          style:
-              theme.textTheme.titleLarge!.copyWith(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
         ),
         Container(
           padding: const EdgeInsets.all(16),
           margin: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: theme.cardColor,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
               BoxShadow(
-                color: theme.shadowColor.withOpacity(0.5),
+                color: Theme.of(context).shadowColor.withOpacity(0.5),
                 spreadRadius: 2,
                 blurRadius: 5,
                 offset: const Offset(0, 3),
@@ -59,7 +77,7 @@ class _SignupFormState extends State<SignupForm> {
           width: MediaQuery.of(context).size.width * 0.35,
           child: Center(
             child: Opacity(
-              opacity: 0.9, // Adjust the opacity as needed
+              opacity: 0.9,
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Form(
@@ -67,102 +85,38 @@ class _SignupFormState extends State<SignupForm> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
-                      TextFormField(
-                        decoration: const InputDecoration(
-                          labelText: 'Company Name ',
-                          border: const OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value!.isEmpty) {
-                            return 'Please enter a business type.';
-                          }
-                          return null;
-                        },
-                        onSaved: (value) {
-                          businessType = value!;
-                        },
-                      ),
-                      const SizedBox(height: 10.0),
                       // TextFormField(
                       //   decoration: const InputDecoration(
-                      //     labelText: 'ISO ID',
+                      //     labelText: 'Admin Name',
                       //     border: OutlineInputBorder(),
                       //   ),
                       //   validator: (value) {
                       //     if (value!.isEmpty) {
-                      //       return 'Please enter services provided.';
+                      //       return 'Please enter owner name.';
                       //     }
                       //     return null;
                       //   },
                       //   onSaved: (value) {
-                      //     servicesProvided = value!;
+                      //     ownerName = value!;
                       //   },
                       // ),
                       // const SizedBox(height: 10.0),
-                      TextFormField(
-                        decoration: const InputDecoration(
-                          labelText: 'Business service ',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value!.isEmpty) {
-                            return 'Please enter owner name.';
-                          }
-                          return null;
-                        },
-                        onSaved: (value) {
-                          ownerName = value!;
-                        },
-                      ),
-                      const SizedBox(height: 10.0),
-                      TextFormField(
-                        decoration: const InputDecoration(
-                          labelText: 'Admin Name',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value!.isEmpty) {
-                            return 'Please enter owner name.';
-                          }
-                          return null;
-                        },
-                        onSaved: (value) {
-                          ownerName = value!;
-                        },
-                      ),
-                      const SizedBox(height: 10.0),
-                      TextFormField(
-                        decoration: const InputDecoration(
-                          labelText: 'phone number',
-                          border: OutlineInputBorder(),
-                        ),
-                        validator: (value) {
-                          if (value!.isEmpty) {
-                            return 'Please enter an ID.';
-                          }
-                          return null;
-                        },
-                        onSaved: (value) {
-                          id = value!;
-                        },
-                      ),
-                      const SizedBox(height: 10.0),
                       // TextFormField(
                       //   decoration: const InputDecoration(
-                      //     labelText: 'Address',
+                      //     labelText: 'Phone Number',
                       //     border: OutlineInputBorder(),
                       //   ),
                       //   validator: (value) {
                       //     if (value!.isEmpty) {
-                      //       return 'Please enter location.';
+                      //       return 'Please enter a phone number.';
                       //     }
                       //     return null;
                       //   },
                       //   onSaved: (value) {
-                      //     location = value!;
+                      //     phoneNumber = value!;
                       //   },
                       // ),
-                      // const SizedBox(height: 10.0),
+                      const SizedBox(height: 10.0),
                       TextFormField(
                         decoration: const InputDecoration(
                           labelText: 'Email-Id',
@@ -170,47 +124,54 @@ class _SignupFormState extends State<SignupForm> {
                         ),
                         validator: (value) {
                           if (value!.isEmpty) {
-                            return 'Please enter official email';
+                            return 'Please enter an email.';
+                          }
+                          if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                            return 'Please enter a valid email.';
                           }
                           return null;
                         },
                         onSaved: (value) {
-                          ownerName = value!;
+                          email = value!;
                         },
                       ),
                       const SizedBox(height: 10.0),
                       TextFormField(
                         decoration: const InputDecoration(
-                          labelText: 'create password',
+                          labelText: 'Create Password',
                           border: OutlineInputBorder(),
                         ),
                         validator: (value) {
                           if (value!.isEmpty) {
-                            return 'Please enter owner name.';
+                            return 'Please enter a password.';
                           }
                           return null;
                         },
                         onSaved: (value) {
-                          ownerName = value!;
+                          password = value!;
                         },
+                        obscureText: true,
                       ),
                       const SizedBox(height: 10.0),
                       TextFormField(
                         decoration: const InputDecoration(
-                          labelText: 'confirm password',
+                          labelText: 'Confirm Password',
                           border: OutlineInputBorder(),
                         ),
                         validator: (value) {
                           if (value!.isEmpty) {
-                            return 'Please .';
+                            return 'Please confirm your password.';
+                          }
+                          if (value != confirmPassword) {
+                            return 'Passwords do not match.';
                           }
                           return null;
                         },
-                        onSaved: (value) {
-                          ownerName = value!;
+                        onChanged: (value) {
+                          confirmPassword = value;
                         },
+                        obscureText: true,
                       ),
-                      const SizedBox(height: 10.0),
                       const SizedBox(height: 20.0),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
@@ -226,9 +187,12 @@ class _SignupFormState extends State<SignupForm> {
                           shadowColor: Colors.grey,
                           minimumSize: Size(100, 40),
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          onSubmit(context, _formKey, ownerName, phoneNumber,
+                              email, password);
+                        },
                         child: const Text(
-                          'Submit',
+                          'Sign Up',
                           style: TextStyle(color: Colors.white),
                         ),
                       ),
@@ -256,9 +220,9 @@ class _SignupFormState extends State<SignupForm> {
                               }));
                             },
                             child: Text(
-                              'LOGIN',
+                              'Log In ',
                               style: TextStyle(
-                                color: Colors.blue.shade900,
+                                color: theme.colorScheme.secondary,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 17.0,
                               ),
@@ -280,22 +244,13 @@ class _SignupFormState extends State<SignupForm> {
                           authServices.signUpWithGoogle(context);
                         },
                         style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 15, vertical: 10),
-                          textStyle: TextStyle(fontSize: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          backgroundColor: Colors.black,
+                          backgroundColor: theme.colorScheme.secondary,
                         ),
-                        icon: const Icon(
-                          Icons.g_mobiledata,
-                          color: Colors.white,
-                        ),
+                        icon: const Icon(Icons.g_mobiledata),
                         label: const Text(
-                          'Sign up with Google',
+                          'SignUp with Google',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: Colors.black,
                             fontWeight: FontWeight.bold,
                           ),
                         ),

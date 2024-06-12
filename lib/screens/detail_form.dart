@@ -16,61 +16,79 @@ class _BusinessOwnerFormState extends State<BusinessOwnerForm> {
   @override
   void initState() {
     widget.isLogin = !widget.isLogin;
-    // TODO: implement initState
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black12,
       appBar: desktopAppBarOpen(context, true),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(15.0),
-          child: Row(
+          child: Stack(
             children: [
-              Column(
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(50),
-                    width: 850,
-                    child: const Text(
-                      '''Unlock the Future of your Business: Join Alphacentauric Business Intelligence Today!''',
-                      style: TextStyle(
-                        fontSize: 40.0,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Row(
+                  Column(
                     children: [
-                      // Image.asset(
-                      //   'asset/24.png',
-                      //   scale: 1,
-                      // ),
-                      Image.asset(
-                        'asset/17.png',
-                        scale: 1.5,
-                      ),
                       Container(
-                        alignment: Alignment.center,
-                        height: 200,
-                        width: 450,
-                        child: const Text(
-                          '''Empowering Your Business with Data-Driven Insights and Success Strategies!!!''',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 15.0,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        padding: const EdgeInsets.all(50),
+                        width: 850,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '''Data Dynamo: Transforming Complexity into Captivating Visual Stories! 🚀 ''',
+                              style: TextStyle(
+                                  fontSize: 30.0,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.indigo.shade900),
+                            ),
+                            SizedBox(
+                              height: 20,
+                            ),
+                            Text(
+                              '''Empowering Your Business with Data-Driven Insights and Success Strategies!!!''',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 15.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Positioned(
+                              left: 1,
+                              bottom: 25,
+                              child: Image.network(
+                                'asset/cubics.gif',
+                                scale: 1.5,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                      Row(
+                        children: [
+                          // Image.asset(
+                          //   'asset/24.png',
+                          //   scale: 1,
+                          // ),
+                          // Image.asset(
+                          //   'asset/17.png',
+                          //   scale: 1.5,
+                          // ),
+                        ],
+                      )
+                      // Image.asset('asset/35 (3).jpeg')
                     ],
-                  )
-                  // Image.asset('asset/35 (3).jpeg')
+                  ),
+                  widget.isLogin ? const LoginForm() : const SignupForm(),
                 ],
               ),
-              widget.isLogin ? const LoginForm() : const SignupForm()
             ],
           ),
         ),

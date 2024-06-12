@@ -34,7 +34,7 @@ class _DesktopHomeScreenState extends State<DesktopHomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white30,
-      appBar: desktopAppBar(context, true),
+      appBar: desktopAppBarOpen(context, true),
       body: ListView(
         children: <Widget>[
           Row(

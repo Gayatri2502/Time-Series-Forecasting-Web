@@ -195,7 +195,7 @@ class _ModelServiceScreenState extends State<ModelServiceScreen> {
                   // const SizedBox(
                   //   width: 20,
                   // ),
-                  buildServiceContainer(5, "Prediction", "asset/ml (10).png"),
+                  // buildServiceContainer(5, "Prediction", "asset/ml (10).png"),
                 ],
               )),
           const SizedBox(

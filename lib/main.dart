@@ -1,4 +1,4 @@
-import 'package:alpha_forecast_app/screens/desktop_home_screen.dart';
+import 'package:alpha_forecast_app/screens/detail_form.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
@@ -47,7 +47,7 @@ class _MyAppState extends State<MyApp> {
         useMaterial3: true,
       ),
       routes: {
-        '/': (context) => DesktopHomeScreen()
+        '/': (context) => BusinessOwnerForm(isLogin: true)
         // '/service_screen': (context) => ServiceScreen(),
         // '/about_screen': (context) => AboutScreen(),
         // '/contact_screen': (context) => ContactScreen(),
